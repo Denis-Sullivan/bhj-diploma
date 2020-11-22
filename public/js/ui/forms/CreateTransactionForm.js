@@ -9,7 +9,8 @@ class CreateTransactionForm {
    * метод renderAccountsList
    * */
   constructor( element ) {
-
+    super(element);
+    this.renderAccountsList();
   }
 
   /**
@@ -17,7 +18,27 @@ class CreateTransactionForm {
    * Обновляет в форме всплывающего окна выпадающий список
    * */
   renderAccountsList() {
+    const user = User.current();
+    if(!user)
+      return;
 
+    Account.list(user, (err, response) => {
+      
+      if (err) {
+        alert(JSON.stringify(err));
+        return;
+      }
+   
+      if (!response.success) {
+        alert(JSON.stringify(response));
+        return;
+      }  
+      
+      let options = '';
+      for (const option of response.data)
+        options += `<option value="${option.id}">${option.name}</option>`;
+      this.element.querySelector('.accounts-select').innerHTML = options;
+    });
   }
 
   /**
@@ -27,6 +48,24 @@ class CreateTransactionForm {
    * в котором находится форма
    * */
   onSubmit( options ) {
-
+    Transaction.create(options.data, (err, response) => {
+      
+      if (err) {
+        alert(JSON.stringify(err));
+        return;
+      }
+   
+      if (!response.success) {
+        alert(JSON.stringify(response));
+        return;
+      } 
+      
+      App.getModal(this.element.closest('.modal').dataset.modalId).close();
+      App.update(); 
+      
+      for (const input of this.element.querySelectorAll('input'))
+        input.value = '';
+      
+    });
   }
 }
